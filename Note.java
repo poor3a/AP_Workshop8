@@ -1,3 +1,4 @@
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -7,10 +8,10 @@ public class Note implements Serializable {
     private ArrayList<String> linesOfNote;
     private String time;
 
-    public Note(String title) {
+    public Note(String title, String time, ArrayList<String> notes) {
         this.title = title;
-        this.time = (new Date()).toString();
-        this.linesOfNote = new ArrayList();
+        this.time = time;
+        this.linesOfNote = notes;
     }
 
     public String getTitle() {
