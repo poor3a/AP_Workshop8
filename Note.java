@@ -8,10 +8,11 @@ public class Note implements Serializable {
     private ArrayList<String> linesOfNote;
     private String time;
 
-    public Note(String title, String time, ArrayList<String> notes) {
+
+    public Note(String title, String time, ArrayList<String> linesofNotes) {
         this.title = title;
         this.time = time;
-        this.linesOfNote = notes;
+        this.linesOfNote = linesofNotes;
     }
 
     public String getTitle() {
