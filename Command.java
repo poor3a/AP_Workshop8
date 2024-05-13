@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public abstract class Command {
-    public static void show(ArrayList<String> titles) throws ClassNotFoundException, IOException {
+
+    public static void showMenu(ArrayList<String> titles) throws ClassNotFoundException, IOException {
         System.out.println("1-Add");
         System.out.println("2-Remove");
         System.out.println("3-Notes");
@@ -16,23 +17,32 @@ public abstract class Command {
     }
 
 
-    public static void commandManager(int command, ArrayList<String> titles) throws ClassNotFoundException, IOException {
-        if (command==0) {
-            FileOutputStream fOut = new FileOutputStream("src/files/titles.bin");
-            ObjectOutputStream out = new ObjectOutputStream(fOut);
-            out.writeObject(titles);
-            fOut.close();
-            out.close();
-            System.exit(0);
+    private static void commandManager(int command, ArrayList<String> titles) throws ClassNotFoundException, IOException {
+        switch (command)
+        {
+            case 0 ->
+            {
+                FileOutputStream fOut = new FileOutputStream("src/files/titles.bin");
+                ObjectOutputStream out = new ObjectOutputStream(fOut);
+                out.writeObject(titles);
+                fOut.close();
+                out.close();
+                System.exit(0);
+            }
+            case 1 -> Command.add(titles);
+            case 2 -> Command.remove(titles);
+            case 3 -> Command.showNotes(titles);
+            case 4 -> Command.export(titles);
+            default ->
+            {
+                System.out.println("wrong input");
+                showMenu(titles);
+            }
+
         }
-        if (command==1) {
-            Command.add(titles);
-        }
-        if (command==2) {
-            Command.remove(titles);
-        }
+
     }
-    public static void add(ArrayList<String> titles) throws IOException, ClassNotFoundException {
+    private static void add(ArrayList<String> titles) throws IOException, ClassNotFoundException {
         System.out.println("Please choose a title for your note (enter 0 to back to menu)");
         Scanner sc = new Scanner(System.in);
         String title = sc.nextLine();
@@ -42,7 +52,7 @@ public abstract class Command {
             title = sc.nextLine();
         }
         if (title.equals("0")) {
-            Command.show(titles);
+            Command.showMenu(titles);
             return;
         }
         ArrayList<String> notes = new ArrayList<>();
@@ -55,8 +65,8 @@ public abstract class Command {
             notes.add(noteLine);
         }
         LocalDateTime time = LocalDateTime.now();
-        String t = time.getYear() + " " + time.getMonthValue() + " " +
-                time.getDayOfMonth() + time.getHour() + " " + time.getMinute();
+        String t = time.getYear() + "/" + time.getMonthValue() + "/" +
+                time.getDayOfMonth() +"  "+ time.getHour() + ":" + time.getMinute();
         Note note = new Note(title ,t ,notes);
         titles.add(title);
         FileOutputStream fOut1 = new FileOutputStream("src/files/"+title+".bin");
@@ -64,18 +74,42 @@ public abstract class Command {
         out1.writeObject(note);
         fOut1.close();
         out1.close();
-        Command.show(titles);
+        Command.showMenu(titles);
     }
 
-    public static void remove(ArrayList<String> titles) throws IOException, ClassNotFoundException
+    private static void remove(ArrayList<String> titles) throws IOException, ClassNotFoundException
     {
         System.out.println("choose on of notes to remove (enter 0 to back to menu");
-        int noteIndex = 1;
+        int noteIndex = showTitles(titles ,1);
+        Scanner sc = new Scanner(System.in);
+        int index;
+        while (true)
+        {
+            index = sc.nextInt();
+            if (index == 0) {
+                Command.showMenu(titles);
+                return;
+            }
+            else if (index >= noteIndex)
+            {
+                System.out.println("index out of bound, please enter a correct number:");
+                continue;
+            }
+            else break;
+        }
+        index--;//ایندکس کاربر از 1 شروع میشود ولی در array list از 0 شروع میشود
+        File f = new File("src/files/"+titles.get(index)+".bin");
+        f.delete();
+        titles.remove(index);
+        Command.showMenu(titles);
+
+    }
+    private static int showTitles(ArrayList<String> titles ,int noteIndex) throws IOException, ClassNotFoundException {
         if (titles.isEmpty())
         {
             System.out.println("no notes have been added.");
-            show(titles);
-            return;
+            showMenu(titles);
+            return 0;
         }
         try{
             for (String title : titles) {
@@ -92,13 +126,21 @@ public abstract class Command {
         {
             System.out.println("file not found");
         }
+        return noteIndex;
+    }
+
+    public static void showNotes(ArrayList<String> titles) throws IOException, ClassNotFoundException {
+        int noteIndex = showTitles(titles ,1);
+        if(noteIndex == 0)
+            return;
         Scanner sc = new Scanner(System.in);
         int index;
         while (true)
         {
             index = sc.nextInt();
-            if (index == 0) {
-                Command.show(titles);
+            if (index == 0)
+            {
+                Command.showMenu(titles);
                 return;
             }
             else if (index >= noteIndex)
@@ -108,15 +150,59 @@ public abstract class Command {
             }
             else break;
         }
-        index--;//ایندکس کاربر از 1 شروع میشود ولی در array list از 0 شروع میشود
-        File f = new File("src/files/"+titles.get(index)+".bin");
-        f.delete();
-        titles.remove(index);
-        Command.show(titles);
-
-
+        index--;
+        try(FileInputStream fIn = new FileInputStream("src/files/"+titles.get(index)+".bin"))
+        {
+            ObjectInputStream in = new ObjectInputStream(fIn);
+            Note note = (Note) in.readObject();
+            fIn.close();
+            in.close();
+            note.showNote();
+        }catch (FileNotFoundException e)
+        {
+            System.out.println("file not found");
+            showMenu(titles);
+        }
+        showMenu(titles);
     }
-    public static boolean duplicate(String title, ArrayList<String> titles) {
+    private static void export(ArrayList<String> titles) throws IOException, ClassNotFoundException {
+        int noteIndex = showTitles(titles ,1);
+        if(noteIndex == 0)
+            return;
+        Scanner sc = new Scanner(System.in);
+        int index;
+        while (true)
+        {
+            index = sc.nextInt();
+            if (index == 0)
+            {
+                Command.showMenu(titles);
+                return;
+            }
+            else if (index >= noteIndex)
+            {
+                System.out.println("index out of bound, please enter a correct number:");
+                continue;
+            }
+            else break;
+        }
+        index--;
+        try(FileInputStream fIn = new FileInputStream("src/files/"+titles.get(index)+".bin"))
+        {
+            ObjectInputStream in = new ObjectInputStream(fIn);
+            Note note = (Note) in.readObject();
+            fIn.close();
+            in.close();
+            note.export();
+        }catch (FileNotFoundException e)
+        {
+            System.out.println("file not found");
+            showMenu(titles);
+        }
+        System.out.println("successfully exported in folder src/exports");
+        showMenu(titles);
+    }
+    private static boolean duplicate(String title, ArrayList<String> titles) {
         Scanner sc = new Scanner(System.in);
         for (String i : titles) {
             if (i.equals(title)) {

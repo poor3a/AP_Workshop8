@@ -18,7 +18,7 @@ public class Main
             ObjectOutputStream out = new ObjectOutputStream(fout);
             out.writeObject(titles);
         }
-        Command.show(titles);
+        Command.showMenu(titles);
 
     }
 }

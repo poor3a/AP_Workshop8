@@ -1,7 +1,5 @@
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class Note implements Serializable {
     private final String title;
@@ -31,8 +29,22 @@ public class Note implements Serializable {
     }
 
     public void showNote() {
-        System.out.println("///////////      *");
-        System.out.println(this.title);
+        System.out.print("///////////      *");
+        System.out.print(this.title);
         System.out.println("*      ///////////");
+        System.out.println();
+        for(String line : linesOfNote){
+            System.out.println(line);
+        }
+    }
+    public void export() throws IOException
+    {
+        FileWriter fileWriter = new FileWriter("src/exports/" +title +".txt");
+        fileWriter.write(title + "               " +time + "\n");
+        for (String line : linesOfNote)
+        {
+            fileWriter.write(line + "\n");
+        }
+        fileWriter.close();
     }
 }
